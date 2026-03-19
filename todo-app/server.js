@@ -3,6 +3,7 @@ const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
 const connectDB = require("./db");
 const Todo = require("./models/todo");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
