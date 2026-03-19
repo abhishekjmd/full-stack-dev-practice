@@ -1,42 +1,43 @@
 const express = require("express");
 const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
+const connectDB = require("./db");
+const Todo = require("./models/todo");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+connectDB();
 
-let todos = [];
-
-app.get("/todos", (req, res) => {
+app.get("/todos", async (req, res) => {
+  const todos = await Todo.find();
   res.json(todos);
 });
 
-app.post("/todos", (req, res) => {
+app.post("/todos", async (req, res) => {
   const { title } = req.body;
   if (!title) {
     return res.status(400).json({ error: "title is required" });
   }
-  const newTodo = {
-    id: uuidv4(),
-    title,
-    completed: false,
-  };
-  todos.push(newTodo);
-  res.status(201).json(newTodo);
+
+  const todo = await Todo.create({ title });
+  res.status(201).json(todo);
 });
 
-app.put("/todos/:id", (req, res) => {
+app.put("/todos/:id", async (req, res) => {
   const { id } = req.params;
-  todos = todos.map((todo) =>
-    todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+  const { title, completed } = req.body;
+  const updated = await Todo.findByIdAndUpdate(
+    id,
+    { title, completed },
+    { new: true },
   );
-  res.json({ message: "Updated" });
+  res.json(updated);
 });
 
-app.delete("/todos/:id", (req, res) => {
+app.delete("/todos/:id", async (req, res) => {
   const { id } = req.params;
-  todos = todos.filter((todo) => todo.id !== id);
+  await Todo.findByIdAndDelete(id);
   res.json({ message: "Deleted" });
 });
 
